@@ -1,0 +1,175 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+   Name = "Koby Hub",
+   Theme = "Light",
+   LoadingTitle = "Koby Interface Suite",
+   LoadingSubtitle = "By Koby",
+   ConfigurationSaving = {
+      Enabled = true,
+      FileName = "KobyHubConfig"
+   },
+   KeySystem = true,
+   KeySettings = {
+      Title = "Koby Hub",
+      Subtitle = "Key System",
+      Note = "KEY IS A PREMIUM", -- Use this to tell the user how to get a key
+      FileName = "Key",
+      SaveKey = false,
+      GrabKeyFromSite = true,
+      Key = {"Phillipinehub"}
+   }
+})
+
+-- Tabs
+local MainTab = Window:CreateTab("Settings", nil)
+local FishingTab = Window:CreateTab("Fishing", nil)
+local AutosTab = Window:CreateTab("Autos", nil)
+local AreasTab = Window:CreateTab("Areas", nil)
+local MarketTab = Window:CreateTab("Market", nil)
+
+-- Notify on load
+Rayfield:Notify({
+   Title = "Script Loaded",
+   Content = "Welcome to Koby Hub!",
+   Duration = 5,
+})
+
+-- Infinite Jump Toggle
+MainTab:CreateButton({
+   Name = "Infinite Jump Toggle",
+   Callback = function()
+       _G.InfiniteJump = not _G.InfiniteJump
+       Rayfield:Notify({
+           Title = "Infinite Jump",
+           Content = _G.InfiniteJump and "Enabled!" or "Disabled!",
+           Duration = 5,
+       })
+
+       if not _G.InfiniteJumpStarted then
+           _G.InfiniteJumpStarted = true
+           local UIS = game:GetService("UserInputService")
+           UIS.InputBegan:Connect(function(input, isProcessed)
+               if not isProcessed and input.KeyCode == Enum.KeyCode.Space and _G.InfiniteJump then
+                   local char = game.Players.LocalPlayer.Character
+                   if char and char:FindFirstChildOfClass("Humanoid") then
+                       char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+                   end
+               end
+           end)
+       end
+   end
+})
+
+-- WalkSpeed Slider
+MainTab:CreateSlider({
+   Name = "WalkSpeed Slider",
+   Range = {16, 350},
+   Increment = 1,
+   Suffix = "Speed",
+   CurrentValue = 16,
+   Callback = function(Value)
+       local char = game.Players.LocalPlayer.Character
+       if char and char:FindFirstChildOfClass("Humanoid") then
+           char:FindFirstChildOfClass("Humanoid").WalkSpeed = Value
+       end
+   end,
+})
+
+-- JumpPower Slider
+MainTab:CreateSlider({
+   Name = "JumpPower Slider",
+   Range = {50, 350},
+   Increment = 1,
+   Suffix = "JumpPower",
+   CurrentValue = 50,
+   Callback = function(Value)
+       local char = game.Players.LocalPlayer.Character
+       if char and char:FindFirstChildOfClass("Humanoid") then
+           char:FindFirstChildOfClass("Humanoid").JumpPower = Value
+       end
+   end,
+})
+
+-- Fishing Tab Placeholder
+FishingTab:CreateLabel("Fishing And Catching tools here")
+
+-- Auto Equip Rod
+FishingTab:CreateToggle({
+   Name = "Auto Equip Rod",
+   CurrentValue = false,
+   Callback = function(Value)
+       _G.AutoEquipRod = Value
+       task.spawn(function()
+           while _G.AutoEquipRod do
+               local player = game.Players.LocalPlayer
+               local backpack = player:FindFirstChild("Backpack")
+               local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+               if backpack and humanoid then
+                   for _, tool in ipairs(backpack:GetChildren()) do
+                       if tool:IsA("Tool") and string.lower(tool.Name):find("rod") then
+                           humanoid:EquipTool(tool)
+                           break
+                       end
+                   end
+               end
+               task.wait(1)
+           end
+       end)
+   end,
+})
+
+-- Auto Cast
+FishingTab:CreateToggle({
+   Name = "Auto Cast",
+   CurrentValue = false,
+   Callback = function(Value)
+       _G.AutoCast = Value
+       task.spawn(function()
+           while _G.AutoCast do
+               local player = game.Players.LocalPlayer
+               local character = player.Character or player.CharacterAdded:Wait()
+               local backpack = player:FindFirstChild("Backpack")
+               local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+               -- Equip any rod from the backpack if none is equipped
+               if backpack and humanoid and not character:FindFirstChildWhichIsA("Tool") then
+                   for _, tool in ipairs(backpack:GetChildren()) do
+                       if tool:IsA("Tool") and string.lower(tool.Name):find("rod") then
+                           humanoid:EquipTool(tool)
+                           break
+                       end
+                   end
+               end
+
+               -- Use the equipped rod to cast
+               local equippedRod = character:FindFirstChildWhichIsA("Tool")
+               if equippedRod and string.lower(equippedRod.Name):find("rod") then
+                   local rodEvents = equippedRod:FindFirstChild("events")
+                   if rodEvents and rodEvents:FindFirstChild("cast") then
+                       rodEvents.cast:FireServer(2000, 1) -- Cast with max power
+                   end
+               end
+               task.wait(0.111) -- Wait before recasting
+           end
+       end)
+   end,
+})
+
+-- Instant Reel
+FishingTab:CreateToggle({
+   Name = "Instant Reel",
+   CurrentValue = false,
+   Callback = function(Value)
+       _G.InstantReel = Value
+       task.spawn(function()
+           while _G.InstantReel do
+               local reelEvent = game:GetService("ReplicatedStorage"):FindFirstChild("events") and
+                   game:GetService("ReplicatedStorage").events:FindFirstChild("reelfinished")
+               if reelEvent then
+                   reelEvent:FireServer(10000, true) -- Reel immediately
+               end
+               task.wait(0.00001) -- Adjust wait time if necessary
+           end
+       end)
+   end,
+})
